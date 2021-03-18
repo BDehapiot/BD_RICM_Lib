@@ -10,7 +10,6 @@ from skimage import io
 from skimage.util import invert
 from skimage.filters import sato
 from skimage.measure import regionprops
-from skimage.transform import hough_circle, hough_circle_peaks
 from skimage.morphology import disk, black_tophat
 
 from scipy.signal import medfilt
@@ -20,10 +19,6 @@ from scipy.ndimage.morphology import distance_transform_edt
 ROOTPATH = 'D:/CurrentTasks/CENTURIProject_LAI_ClaireValotteau/'
 RAWNAME = 'raw_01_c02.tif'
 EMPTY_t0 = 2020
-
-CIRCLES_n = 1
-CIRCLES_min_rad = 35
-CIRCLES_max_rad = 45
 
 #%% Open Stack from RAWNAME
 
@@ -76,19 +71,21 @@ raw_wavg_reg = np.stack([arrays for arrays in output_list], axis=0)
 
 static_bg = np.mean(raw_wavg_reg[EMPTY_t0:-1,:,:],0)
 static_bg[static_bg == 0] = 'nan'
+raw_wavg_reg[raw_wavg_reg == 0] = 'nan'
 raw_wavg_reg_bgsub = raw_wavg_reg - static_bg
 raw_wavg_reg_bgsub = np.nan_to_num(raw_wavg_reg_bgsub, nan=0.0) 
 
 #%% apply sato filter
 
-def sato_filter(im):
+def sato_filter(im, sigmas):
     '''Enter function general description + arguments'''
-    im_sato = sato(im,sigmas=4,mode='reflect',black_ridges=False)   
+    im_sato = sato(im,sigmas=sigmas,mode='reflect',black_ridges=False)   
     return im_sato
 
 output_list = Parallel(n_jobs=35)(
     delayed(sato_filter)(
-        raw_wavg_reg_bgsub[i,:,:]
+        raw_wavg_reg_bgsub[i,:,:],
+        4
         ) 
     for i in range(nT-30)
     ) 
@@ -102,13 +99,6 @@ thresh_quant = np.quantile(raw_wavg_reg_bgsub_sato, 0.95)
 raw_wavg_reg_bgsub_sato = raw_wavg_reg_bgsub_sato > thresh_quant
 raw_wavg_reg_bgsub_sato = raw_wavg_reg_bgsub_sato.astype('float') 
            
-def image_reg(im0, im1, im2reg):
-    '''Enter function general description + arguments'''
-    sr = StackReg(StackReg.TRANSLATION)
-    sr.register(im0, im1)
-    im_reg = sr.transform(im2reg)
-    return im_reg
-
 output_list = Parallel(n_jobs=35)(
     delayed(image_reg)(
         raw_wavg_reg_bgsub_sato[0,:,:],
@@ -152,26 +142,20 @@ raw_wavg_reg_bgsub_reg_circavg = np.stack([arrays for arrays in output_list], ax
 
 #%% apply sato filter
 
-def sato_filter(im):
-    '''Enter function general description + arguments'''
-    im_sato = sato(im,sigmas=2,mode='reflect',black_ridges=False)   
-    return im_sato
-
 output_list = Parallel(n_jobs=35)(
     delayed(sato_filter)(
-        raw_wavg_reg_bgsub_reg_circavg[i,:,:]
+        raw_wavg_reg_bgsub_reg_circavg[i,:,:],
+        2
         ) 
     for i in range(nT-30)
     ) 
 
 raw_wavg_reg_bgsub_reg_circavg_sato = np.stack([arrays for arrays in output_list], axis=0)  
 
-    
-
 #%% Napari
    
 with napari.gui_qt():
-    viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg_sato)
+    viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg)
 
 #%% Saving
 # io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg.tif', raw_wavg.astype('uint8'), check_contrast=True)

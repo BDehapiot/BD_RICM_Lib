@@ -97,13 +97,10 @@ raw_wavg_reg_bgsub_sato = np.stack([arrays for arrays in output_list], axis=0)
 
 #%% image registration (bead)
 
+# binarize sato filtered image
 thresh_quant = np.quantile(raw_wavg_reg_bgsub_sato, 0.95)
 raw_wavg_reg_bgsub_sato = raw_wavg_reg_bgsub_sato > thresh_quant
 raw_wavg_reg_bgsub_sato = raw_wavg_reg_bgsub_sato.astype('float') 
-
-props = regionprops(raw_wavg_reg_bgsub_sato[0,:,:].astype('int'))
-ctrd_x = props.centroid[1]
-ctrd_y = props.centroid[0]
            
 def image_reg(im0, im1, im2reg):
     '''Enter function general description + arguments'''
@@ -122,12 +119,59 @@ output_list = Parallel(n_jobs=35)(
  
 raw_wavg_reg_bgsub_reg = np.stack([arrays for arrays in output_list], axis=0)     
 
-#%%
+#%% circular averaging
+
+# get circle centroid (first frame as reference)
+props = regionprops(raw_wavg_reg_bgsub_sato[0,:,:].astype('int'))
+ctrd_x = props[0].centroid[1]
+ctrd_y = props[0].centroid[0]
+
+# get Euclidian distance map (edm)
+centroid = np.zeros([nY, nX])
+centroid[np.round(ctrd_y).astype('int'), np.round(ctrd_x).astype('int')] = 1
+centroid_edm = distance_transform_edt(invert(centroid))
+
+def circular_avg(im):
+    unique = np.unique(centroid_edm)
+    unique_meanval = np.zeros([len(unique)])    
+    im_circavg = np.zeros([nY, nX])
+    for i in range(len(unique)):
+        tempidx = np.where(centroid_edm == unique[i])
+        unique_meanval[i] = np.mean(im[tempidx])
+        im_circavg[tempidx] = unique_meanval[i]
+    return im_circavg
+
+output_list = Parallel(n_jobs=35)(
+    delayed(circular_avg)(
+        raw_wavg_reg_bgsub_reg[i,:,:],
+        ) 
+    for i in range(nT-30)
+    )
+ 
+raw_wavg_reg_bgsub_reg_circavg = np.stack([arrays for arrays in output_list], axis=0) 
+
+#%% apply sato filter
+
+def sato_filter(im):
+    '''Enter function general description + arguments'''
+    im_sato = sato(im,sigmas=2,mode='reflect',black_ridges=False)   
+    return im_sato
+
+output_list = Parallel(n_jobs=35)(
+    delayed(sato_filter)(
+        raw_wavg_reg_bgsub_reg_circavg[i,:,:]
+        ) 
+    for i in range(nT-30)
+    ) 
+
+raw_wavg_reg_bgsub_reg_circavg_sato = np.stack([arrays for arrays in output_list], axis=0)  
+
+    
 
 #%% Napari
    
 with napari.gui_qt():
-    viewer = napari.view_image(raw_wavg_reg_bgsub_reg)
+    viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg_sato)
 
 #%% Saving
 # io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg.tif', raw_wavg.astype('uint8'), check_contrast=True)

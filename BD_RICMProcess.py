@@ -113,12 +113,12 @@ raw_wavg_reg_bgsub_reg = np.stack([arrays for arrays in output_list], axis=0)
 
 # get circle centroid (first frame as reference)
 props = regionprops(raw_wavg_reg_bgsub_sato[0,:,:].astype('int'))
-ctrd_x = props[0].centroid[1]
-ctrd_y = props[0].centroid[0]
+ctrd_x = np.round(props[0].centroid[1]).astype('int')
+ctrd_y = np.round(props[0].centroid[0]).astype('int')
 
 # get Euclidian distance map (edm)
 centroid = np.zeros([nY, nX])
-centroid[np.round(ctrd_y).astype('int'), np.round(ctrd_x).astype('int')] = 1
+centroid[ctrd_y, ctrd_x] = 1
 centroid_edm = distance_transform_edt(invert(centroid))
 
 def circular_avg(im):
@@ -152,15 +152,27 @@ output_list = Parallel(n_jobs=35)(
 
 raw_wavg_reg_bgsub_reg_circavg_sato = np.stack([arrays for arrays in output_list], axis=0)  
 
+#%%
+
+temp_profile = raw_wavg_reg_bgsub_reg_circavg_sato[0,ctrd_y, ctrd_x:-1]
+profile = np.zeros([len(temp_profile), nT-30])
+for i in range(nT-30):
+    profile[:,i] = raw_wavg_reg_bgsub_reg_circavg_sato[i,ctrd_y, ctrd_x:-1]        
+    
+
+
+
 #%% Napari
    
-with napari.gui_qt():
-    viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg)
+# with napari.gui_qt():
+#     viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg)
 
 #%% Saving
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg.tif', raw_wavg.astype('uint8'), check_contrast=True)
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_binary.tif', raw_wavg_binary.astype('uint8')*255, check_contrast=True)
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg.tif', raw_wavg_reg.astype('uint8'), check_contrast=True) 
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub.tif', raw_wavg_reg_bgsub.astype('float32'), check_contrast=True) 
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_edges.tif', raw_wavg_reg_bgsub_edges.astype('float32'), check_contrast=True) 
-# io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_crop.tif', raw_wavg_reg_bgsub_crop.astype('float32'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg.tif', raw_wavg.astype('uint8'), check_contrast=True)
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_binary.tif', raw_wavg_binary.astype('uint8')*255, check_contrast=True)
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg.tif', raw_wavg_reg.astype('uint8'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub.tif', raw_wavg_reg_bgsub.astype('float32'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_sato.tif', raw_wavg_reg_bgsub_sato.astype('float32'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_reg.tif', raw_wavg_reg_bgsub_reg.astype('float32'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_reg_circavg.tif', raw_wavg_reg_bgsub_reg_circavg.astype('float32'), check_contrast=True) 
+io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg_bgsub_reg_circavg_sato.tif', raw_wavg_reg_bgsub_reg_circavg_sato.astype('float32'), check_contrast=True) 

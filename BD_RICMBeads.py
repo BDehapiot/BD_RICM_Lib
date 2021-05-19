@@ -207,7 +207,7 @@ tracking_display = np.concatenate((
 
 #%% Export results
 
-np.savetxt("ROOTPATH+RAWNAME[0:-4]+'_inCircleDiameter.csv", peak_of_interest, delimiter=",")
+np.savetxt(ROOTPATH+RAWNAME[0:-4]+"_inner_circle_diameter_pixel.csv", peak_of_interest, fmt='%.4f', delimiter=",")
 
 #%% Save images
 

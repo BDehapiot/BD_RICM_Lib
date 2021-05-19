@@ -1,0 +1,12 @@
+name: BD_RICM
+
+channels:
+- conda-forge
+
+dependencies:
+- python>=3.8
+- numpy
+- pystackreg
+- joblib
+- scikit-image
+- scipy

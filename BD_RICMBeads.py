@@ -205,13 +205,12 @@ tracking_display = np.concatenate((
     axis=0
     ) 
 
+#%% Export results
 
-#%% Napari
-   
-# with napari.gui_qt():
-#     viewer = napari.view_image(raw_wavg_reg_bgsub_reg_circavg)
+np.savetxt("ROOTPATH+RAWNAME[0:-4]+'_inCircleDiameter.csv", peak_of_interest, delimiter=",")
 
-#%% Saving
+#%% Save images
+
 io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg.tif', raw_wavg.astype('uint8'), check_contrast=True)
 io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_binary.tif', raw_wavg_binary.astype('uint8')*255, check_contrast=True)
 io.imsave(ROOTPATH+RAWNAME[0:-4]+'_wavg_reg.tif', raw_wavg_reg.astype('uint8'), check_contrast=True) 

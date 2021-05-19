@@ -1,0 +1,5 @@
+numpy
+pystackreg
+joblib
+scikit-image
+scipy

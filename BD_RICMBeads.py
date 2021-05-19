@@ -1,5 +1,4 @@
 #%% Initialize
-import napari
 import numpy as np
 
 from pystackreg import StackReg
@@ -14,12 +13,12 @@ from skimage.draw import circle_perimeter
 from skimage.morphology import disk, black_tophat
 
 from scipy.interpolate import interp1d
-from scipy.signal import medfilt, find_peaks
+from scipy.signal import find_peaks
 from scipy.ndimage.morphology import distance_transform_edt
 
 #%% varnames
 ROOTPATH = 'D:/CurrentTasks/CENTURIProject_LAI_ClaireValotteau/'
-RAWNAME = 'raw_01_c02.tif'
+RAWNAME = 'raw_01_c01.tif'
 EMPTY_t0 = 2020 # timepoint at which the bead is no longer visible
 wAVG = 30 # window size for walking averaged imageSATO
 SATO_sig = 3 # sigma size for sato filter 

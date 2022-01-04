@@ -1,11 +1,11 @@
-name: BD_RICMlib
+name: BD_RICM_Lib
 
 channels:
     - conda-forge
 
 dependencies:
     - python>=3.8
-    - spyder
+    - pip
     - numpy
     - joblib
     - scikit-image
@@ -13,4 +13,6 @@ dependencies:
     - matplotlib-base
     - pystackreg
     - tensorflow
+
+
 
